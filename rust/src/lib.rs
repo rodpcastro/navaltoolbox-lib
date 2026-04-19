@@ -50,6 +50,7 @@ pub mod deckedge;
 pub mod downflooding;
 pub mod hull;
 pub mod hydrostatics;
+pub mod loading;
 pub mod mesh;
 pub mod scripting;
 
@@ -72,6 +73,7 @@ pub use silhouette::Silhouette;
 pub use stability::{
     CompleteStabilityResult, StabilityCalculator, StabilityCurve, StabilityPoint, WindHeelingData,
 };
+pub use loading::{LoadingCondition, MassCategory, MassItem};
 pub use tanks::{Tank, TankState};
 pub use vessel::Vessel;
 
