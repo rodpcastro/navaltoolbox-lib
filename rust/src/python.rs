@@ -26,6 +26,10 @@ use pyo3::prelude::*;
 use crate::appendage::{Appendage as RustAppendage, AppendageGeometry};
 use crate::deckedge::{DeckEdge as RustDeckEdge, DeckEdgeSide as RustDeckEdgeSide};
 use crate::hull::Hull as RustHull;
+use crate::loading::{
+    LoadingCondition as RustLoadingCondition, MassCategory as RustMassCategory,
+    MassItem as RustMassItem,
+};
 use crate::hydrostatics::{
     HydrostaticState as RustHydroState, HydrostaticsCalculator as RustHydroCalc,
 };
@@ -2510,6 +2514,326 @@ fn map_result_to_py(res: RustCriteriaResult) -> PyCriteriaResult {
 }
 
 // ============================================================================
+// MassCategory Python Wrapper
+// ============================================================================
+
+/// Category of a mass item.
+///
+/// Use static methods to create:
+/// - MassCategory.lightship()
+/// - MassCategory.deadweight()
+/// - MassCategory.other()
+#[pyclass(name = "MassCategory")]
+#[derive(Clone)]
+pub struct PyMassCategory {
+    pub(crate) inner: RustMassCategory,
+}
+
+#[pymethods]
+impl PyMassCategory {
+    /// Creates a Lightship category.
+    #[staticmethod]
+    fn lightship() -> Self {
+        Self {
+            inner: RustMassCategory::Lightship,
+        }
+    }
+
+    /// Creates a Deadweight category.
+    #[staticmethod]
+    fn deadweight() -> Self {
+        Self {
+            inner: RustMassCategory::Deadweight,
+        }
+    }
+
+    /// Creates an Other category (default).
+    #[staticmethod]
+    fn other() -> Self {
+        Self {
+            inner: RustMassCategory::Other,
+        }
+    }
+
+    fn __repr__(&self) -> String {
+        format!("MassCategory({})", self.inner)
+    }
+}
+
+// ============================================================================
+// MassItem Python Wrapper
+// ============================================================================
+
+/// A single mass item with name, mass, position, and optional category.
+#[pyclass(name = "MassItem")]
+#[derive(Clone)]
+pub struct PyMassItem {
+    pub(crate) inner: RustMassItem,
+}
+
+#[pymethods]
+impl PyMassItem {
+    /// Create a mass item.
+    ///
+    /// Args:
+    ///     name: Identifier for the mass item.
+    ///     mass: Mass in kg.
+    ///     cog: Center of gravity (lcg, tcg, vcg) in meters.
+    ///     category: Optional MassCategory (default: Other).
+    #[new]
+    #[pyo3(signature = (name, mass, cog, category=None))]
+    fn new(name: &str, mass: f64, cog: (f64, f64, f64), category: Option<PyMassCategory>) -> Self {
+        let mut item = RustMassItem::new(name, mass, [cog.0, cog.1, cog.2]);
+        if let Some(cat) = category {
+            item.category = cat.inner;
+        }
+        Self { inner: item }
+    }
+
+    /// Returns the mass item name.
+    #[getter]
+    fn name(&self) -> &str {
+        &self.inner.name
+    }
+
+    /// Returns the mass in kg.
+    #[getter]
+    fn mass(&self) -> f64 {
+        self.inner.mass
+    }
+
+    /// Returns the center of gravity (lcg, tcg, vcg).
+    #[getter]
+    fn cog(&self) -> (f64, f64, f64) {
+        (self.inner.cog[0], self.inner.cog[1], self.inner.cog[2])
+    }
+
+    /// Returns the mass category.
+    #[getter]
+    fn category(&self) -> PyMassCategory {
+        PyMassCategory {
+            inner: self.inner.category.clone(),
+        }
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "MassItem(name='{}', mass={:.0}kg, cog=({:.2}, {:.2}, {:.2}), category={})",
+            self.inner.name,
+            self.inner.mass,
+            self.inner.cog[0],
+            self.inner.cog[1],
+            self.inner.cog[2],
+            self.inner.category
+        )
+    }
+}
+
+// ============================================================================
+// LoadingCondition Python Wrapper
+// ============================================================================
+
+/// A complete loading condition with mass items and tank fill overrides.
+///
+/// Example:
+///     >>> lc = LoadingCondition("Departure — Full Load")
+///     >>> lc.add_mass_simple("Lightship", 5_000_000, (45.0, 0.0, 4.5), MassCategory.lightship())
+///     >>> lc.set_tank_fill_percent("FO_1P", 95.0)
+///     >>> lc.apply(vessel)
+///     >>> displacement, cog = lc.resolve(vessel)
+#[pyclass(name = "LoadingCondition")]
+#[derive(Clone)]
+pub struct PyLoadingCondition {
+    inner: RustLoadingCondition,
+}
+
+#[pymethods]
+impl PyLoadingCondition {
+    /// Create a new empty loading condition.
+    #[new]
+    fn new(name: &str) -> Self {
+        Self {
+            inner: RustLoadingCondition::new(name),
+        }
+    }
+
+    // ── Properties ───────────────────────────────────────
+
+    /// Returns the loading condition name.
+    #[getter]
+    fn name(&self) -> &str {
+        &self.inner.name
+    }
+
+    /// Sets the loading condition name.
+    #[setter]
+    fn set_name(&mut self, name: &str) {
+        self.inner.name = name.to_string();
+    }
+
+    // ── Mass management ──────────────────────────────────
+
+    /// Add a mass item.
+    fn add_mass(&mut self, item: &PyMassItem) {
+        self.inner.add_mass(item.inner.clone());
+    }
+
+    /// Add a mass item by parameters (convenience).
+    ///
+    /// Args:
+    ///     name: Identifier for the mass item.
+    ///     mass: Mass in kg.
+    ///     cog: Center of gravity (lcg, tcg, vcg) in meters.
+    ///     category: Optional MassCategory (default: Other).
+    #[pyo3(signature = (name, mass, cog, category=None))]
+    fn add_mass_simple(
+        &mut self,
+        name: &str,
+        mass: f64,
+        cog: (f64, f64, f64),
+        category: Option<PyMassCategory>,
+    ) {
+        let mut item = RustMassItem::new(name, mass, [cog.0, cog.1, cog.2]);
+        if let Some(cat) = category {
+            item.category = cat.inner;
+        }
+        self.inner.add_mass(item);
+    }
+
+    /// Remove a mass item by name. Returns True if found and removed.
+    fn remove_mass(&mut self, name: &str) -> bool {
+        self.inner.remove_mass(name)
+    }
+
+    /// Returns all mass items.
+    fn get_masses(&self) -> Vec<PyMassItem> {
+        self.inner
+            .masses()
+            .iter()
+            .map(|m| PyMassItem { inner: m.clone() })
+            .collect()
+    }
+
+    /// Returns the number of mass items.
+    fn num_masses(&self) -> usize {
+        self.inner.num_masses()
+    }
+
+    // ── Tank fill overrides ──────────────────────────────
+
+    /// Set a tank fill override by fill level (0.0 to 1.0).
+    fn set_tank_fill(&mut self, tank_name: &str, fill_level: f64) {
+        self.inner.set_tank_fill(tank_name, fill_level);
+    }
+
+    /// Set a tank fill override by percentage (0 to 100).
+    fn set_tank_fill_percent(&mut self, tank_name: &str, fill_percent: f64) {
+        self.inner.set_tank_fill_percent(tank_name, fill_percent);
+    }
+
+    /// Remove a tank fill override. Returns True if found and removed.
+    fn remove_tank_fill(&mut self, tank_name: &str) -> bool {
+        self.inner.remove_tank_fill(tank_name)
+    }
+
+    /// Returns the number of tank fill overrides.
+    fn num_tank_overrides(&self) -> usize {
+        self.inner.num_tank_overrides()
+    }
+
+    /// Returns tank fill overrides as a dict {name: fill_level}.
+    fn get_tank_fills(&self) -> std::collections::HashMap<String, f64> {
+        self.inner.tank_fills().clone()
+    }
+
+    // ── Application & calculation ────────────────────────
+
+    /// Apply tank fill overrides to the vessel's tanks.
+    ///
+    /// Only tanks listed in tank_fills are modified.
+    /// Other tanks keep their current fill level.
+    fn apply(&self, vessel: &mut PyVessel) {
+        self.inner.apply(&mut vessel.inner);
+    }
+
+    /// Returns the total displacement (masses + tank fluid masses) in kg.
+    ///
+    /// Must be called after apply() so tank fill levels are current.
+    fn total_displacement(&self, vessel: &PyVessel) -> f64 {
+        self.inner.total_displacement(&vessel.inner)
+    }
+
+    /// Returns the combined center of gravity (lcg, tcg, vcg) in meters.
+    ///
+    /// Must be called after apply() so tank fill levels are current.
+    fn total_cog(&self, vessel: &PyVessel) -> (f64, f64, f64) {
+        let cog = self.inner.total_cog(&vessel.inner);
+        (cog[0], cog[1], cog[2])
+    }
+
+    /// Returns (total_displacement, (lcg, tcg, vcg)) in a single call.
+    ///
+    /// Must be called after apply() so tank fill levels are current.
+    fn resolve(&self, vessel: &PyVessel) -> (f64, (f64, f64, f64)) {
+        let (disp, cog) = self.inner.resolve(&vessel.inner);
+        (disp, (cog[0], cog[1], cog[2]))
+    }
+
+    // ── Serialization ────────────────────────────────────
+
+    /// Serialize to JSON string.
+    fn to_json(&self) -> PyResult<String> {
+        self.inner
+            .to_json()
+            .map_err(|e| PyValueError::new_err(format!("JSON error: {}", e)))
+    }
+
+    /// Deserialize from JSON string.
+    #[staticmethod]
+    fn from_json(json: &str) -> PyResult<Self> {
+        RustLoadingCondition::from_json(json)
+            .map(|lc| Self { inner: lc })
+            .map_err(|e| PyValueError::new_err(format!("JSON error: {}", e)))
+    }
+
+    /// Save to JSON file.
+    fn save_json(&self, path: &str) -> PyResult<()> {
+        self.inner
+            .to_json_file(std::path::Path::new(path))
+            .map_err(|e| PyIOError::new_err(format!("Failed to save JSON: {}", e)))
+    }
+
+    /// Load from JSON file.
+    #[staticmethod]
+    fn load_json(path: &str) -> PyResult<Self> {
+        RustLoadingCondition::from_json_file(std::path::Path::new(path))
+            .map(|lc| Self { inner: lc })
+            .map_err(|e| PyIOError::new_err(format!("Failed to load JSON: {}", e)))
+    }
+
+    // ── Copy ─────────────────────────────────────────────
+
+    /// Create a copy, optionally with a new name.
+    #[pyo3(signature = (name=None))]
+    fn copy(&self, name: Option<&str>) -> Self {
+        let mut cloned = self.inner.clone();
+        if let Some(n) = name {
+            cloned.name = n.to_string();
+        }
+        Self { inner: cloned }
+    }
+
+    fn __repr__(&self) -> String {
+        format!(
+            "LoadingCondition(name='{}', masses={}, tank_overrides={})",
+            self.inner.name,
+            self.inner.num_masses(),
+            self.inner.num_tank_overrides(),
+        )
+    }
+}
+
+// ============================================================================
 // Python Module Definition
 // ============================================================================
 
@@ -2535,6 +2859,11 @@ fn navaltoolbox(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_class::<PyCompleteStabilityResult>()?;
     m.add_class::<PyStabilityCalculator>()?;
     m.add_class::<PyTank>()?;
+
+    // Loading Conditions
+    m.add_class::<PyMassCategory>()?;
+    m.add_class::<PyMassItem>()?;
+    m.add_class::<PyLoadingCondition>()?;
 
     // Scripting
     m.add_class::<PyCriterionResult>()?;
