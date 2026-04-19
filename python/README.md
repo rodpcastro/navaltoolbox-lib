@@ -18,6 +18,7 @@ NavalToolbox provides fast and accurate naval architecture calculations through 
 - ⚖️ **Stability Analysis**: GZ curve calculation with automatic trim optimization
 - 🌊 **Downflooding Detection**: Automatic detection of submerged openings
 - 🛢️ **Tank Management**: Fill levels, free surface effects, sounding tables
+- ⚖️ **Loading Conditions**: Compose mass inventories and tank overrides to build operational profiles
 - 💨 **Wind Heeling**: Silhouette-based wind calculations (DXF/VTK support)
 - 📝 **Scriptable Verification**: Rhai scripting engine for custom stability criteria
 - 🧊 **3D Visualization**: Interactive vessel and hydrostatic visualization with Plotly
@@ -110,6 +111,33 @@ max_gz = max(gz_values)
 max_idx = gz_values.index(max_gz)
 max_heel = heels[max_idx]
 print(f"\nMax GZ: {max_gz:.3f}m at {max_heel}°")
+```
+
+### Loading Conditions
+
+```python
+from navaltoolbox import Hull, Vessel, Tank, LoadingCondition, MassCategory
+
+# Create vessel with a tank
+vessel = Vessel(Hull("ship.stl"))
+vessel.add_tank(Tank.from_box("FO_1", 20.0, 30.0, -5.0, 5.0, 0.0, 2.0, 1000.0))
+
+# Define loading condition
+lc = LoadingCondition("Arrival")
+lc.add_mass_simple("Lightship", 5000000.0, (40.0, 0.0, 5.0), MassCategory.lightship())
+lc.set_tank_fill_percent("FO_1", 50.0)
+
+# Apply and resolve
+lc.apply(vessel)
+disp, cog = lc.resolve(vessel)
+item_disp, item_cog = lc.resolve_items()
+
+print(f"Total Combined Displacement: {disp:.0f} kg")
+print(f"Combined COG: {cog}")
+print(f"Solid items only: {item_disp:.0f} kg at {item_cog}")
+
+# Use item_disp and item_cog for stability calculations
+# as the StabilityCalculator handles tanks intrinsically.
 ```
 
 ## Documentation

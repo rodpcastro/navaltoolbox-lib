@@ -50,6 +50,7 @@ Tank
 
    .. py:attribute:: name
       :type: str
+      :no-index:
 
       Tank name.
 
