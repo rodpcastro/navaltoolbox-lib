@@ -65,6 +65,7 @@ pub use deckedge::{DeckEdge, DeckEdgeLoadError, DeckEdgeSide};
 pub use downflooding::{DownfloodingOpening, OpeningGeometry, OpeningType};
 pub use hull::Hull;
 pub use hydrostatics::{HydrostaticState, HydrostaticsCalculator};
+pub use loading::{LoadingCondition, MassCategory, MassItem};
 pub use scripting::{
     CriteriaContext, CriteriaResult, CriteriaStatus, CriterionResult, PlotData, PlotElement,
     ScriptEngine, ScriptError,
@@ -73,7 +74,6 @@ pub use silhouette::Silhouette;
 pub use stability::{
     CompleteStabilityResult, StabilityCalculator, StabilityCurve, StabilityPoint, WindHeelingData,
 };
-pub use loading::{LoadingCondition, MassCategory, MassItem};
 pub use tanks::{Tank, TankState};
 pub use vessel::Vessel;
 

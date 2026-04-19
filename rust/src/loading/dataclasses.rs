@@ -33,20 +33,15 @@ use crate::vessel::Vessel;
 ///
 /// Used for classification and reporting. Sub-categories of deadweight
 /// (consumables, ballast, stores…) may be added in a future version.
-#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
 pub enum MassCategory {
     /// Ship structure, machinery, and permanent equipment.
     Lightship,
     /// Variable loads: cargo, stores, crew, consumables, ballast, etc.
     Deadweight,
     /// Uncategorized mass item.
+    #[default]
     Other,
-}
-
-impl Default for MassCategory {
-    fn default() -> Self {
-        MassCategory::Other
-    }
 }
 
 impl std::fmt::Display for MassCategory {
