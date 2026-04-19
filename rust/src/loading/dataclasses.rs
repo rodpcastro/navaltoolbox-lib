@@ -223,11 +223,16 @@ impl LoadingCondition {
         }
     }
 
-    /// Calculates the total displacement (masses + tank fluid masses).
+    /// Calculates the displacement of the mass items only (excluding tank fluids).
+    pub fn item_displacement(&self) -> f64 {
+        self.masses.iter().map(|m| m.mass).sum()
+    }
+
+    /// Calculates the total displacement (mass items + tank fluid masses).
     ///
     /// Must be called after `apply()` so that tank fill levels are current.
     pub fn total_displacement(&self, vessel: &Vessel) -> f64 {
-        let masses_total: f64 = self.masses.iter().map(|m| m.mass).sum();
+        let masses_total = self.item_displacement();
         let tanks_total: f64 = vessel.get_total_tanks_mass();
         masses_total + tanks_total
     }
@@ -268,6 +273,28 @@ impl LoadingCondition {
             moment[1] / total_disp,
             moment[2] / total_disp,
         ]
+    }
+
+    /// Calculates the center of gravity of the mass items only (excluding tank fluids).
+    pub fn item_cog(&self) -> [f64; 3] {
+        let disp = self.item_displacement();
+        if disp <= 0.0 {
+            return [0.0, 0.0, 0.0];
+        }
+
+        let mut moment = [0.0f64; 3];
+        for m in &self.masses {
+            moment[0] += m.mass * m.cog[0];
+            moment[1] += m.mass * m.cog[1];
+            moment[2] += m.mass * m.cog[2];
+        }
+
+        [moment[0] / disp, moment[1] / disp, moment[2] / disp]
+    }
+
+    /// Convenience: returns `(item_displacement, item_cog)` in a single call.
+    pub fn resolve_items(&self) -> (f64, [f64; 3]) {
+        (self.item_displacement(), self.item_cog())
     }
 
     /// Convenience: returns `(total_displacement, total_cog)` in a single call.
