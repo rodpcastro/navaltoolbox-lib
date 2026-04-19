@@ -111,6 +111,11 @@ class TestLoadingCondition:
         assert disp > 100_000  # Must include tank mass
         assert cog[0] > 0  # LCG should be positive
 
+        # Test item-only resolution (excluding tanks)
+        item_disp, item_cog = lc.resolve_items()
+        assert item_disp == 100_000
+        assert item_cog[0] == 50.0
+
     def test_unaffected_tanks_keep_fill(self):
         """Tanks not in the override list must keep their current fill."""
         from navaltoolbox import LoadingCondition, Hull, Vessel, Tank
