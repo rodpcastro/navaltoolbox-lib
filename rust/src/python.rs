@@ -26,12 +26,12 @@ use pyo3::prelude::*;
 use crate::appendage::{Appendage as RustAppendage, AppendageGeometry};
 use crate::deckedge::{DeckEdge as RustDeckEdge, DeckEdgeSide as RustDeckEdgeSide};
 use crate::hull::Hull as RustHull;
+use crate::hydrostatics::{
+    HydrostaticState as RustHydroState, HydrostaticsCalculator as RustHydroCalc,
+};
 use crate::loading::{
     LoadingCondition as RustLoadingCondition, MassCategory as RustMassCategory,
     MassItem as RustMassItem,
-};
-use crate::hydrostatics::{
-    HydrostaticState as RustHydroState, HydrostaticsCalculator as RustHydroCalc,
 };
 use crate::scripting::{
     CriteriaContext as RustCriteriaContext, CriteriaResult as RustCriteriaResult,
