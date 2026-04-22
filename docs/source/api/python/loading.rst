@@ -221,12 +221,10 @@ LoadingCondition
 
       **CSV Format Example:**
 
-      .. code-block:: csv
+      .. literalinclude:: ../../examples/loading_condition_template.csv
+         :language: csv
 
-         Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent
-         Mass,Lightship,5000000.0,45.0,0.0,4.5,Lightship,
-         Mass,Crew,3000.0,35.0,0.0,8.0,Other,
-         Tank,FO_1P,,,,,,95.0
+      You can download this template here: :download:`loading_condition_template.csv <../../examples/loading_condition_template.csv>`
 
       :rtype: LoadingCondition
 
