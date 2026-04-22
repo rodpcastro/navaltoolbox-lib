@@ -1656,6 +1656,31 @@ impl PyHydrostaticsCalculator {
         .map_err(|e| PyValueError::new_err(e))
     }
 
+    /// Calculate hydrostatics for a given LoadingCondition.
+    ///
+    /// Automatically applies tank fill overrides, calculates the equilibrium,
+    /// and restores the original tank fill levels.
+    ///
+    /// Args:
+    ///     loading: LoadingCondition to analyze
+    ///     num_stations: Optional number of stations for sectional area curve
+    ///
+    /// Returns:
+    ///     Complete HydrostaticState
+    #[pyo3(signature = (loading, num_stations=None))]
+    #[allow(clippy::wrong_self_convention)]
+    fn from_loading(
+        &self,
+        loading: &crate::python::PyLoadingCondition,
+        num_stations: Option<usize>,
+    ) -> PyResult<PyHydrostaticState> {
+        let calc = RustHydroCalc::new(&self.vessel, self.water_density);
+        
+        calc.from_loading(&loading.inner, num_stations)
+            .map(|s| s.into())
+            .map_err(|e| PyValueError::new_err(e))
+    }
+
     /// Returns the water density.\n    #[getter]
     fn water_density(&self) -> f64 {
         self.water_density
@@ -2011,6 +2036,58 @@ impl PyStabilityCalculator {
             tank_options.map(|t| t.inner),
             fixed_trim,
         );
+        result.into()
+    }
+
+    /// Calculate the GZ curve for a given LoadingCondition.
+    ///
+    /// Automatically applies tank fill overrides, uses solid displacement,
+    /// and restores original fill levels to avoid double counting.
+    ///
+    /// Args:
+    ///     loading: LoadingCondition to analyze
+    ///     heels: List of heel angles in degrees
+    ///     fixed_trim: Optional fixed trim in degrees
+    ///
+    /// Returns:
+    ///     StabilityCurve
+    #[pyo3(signature = (loading, heels, fixed_trim=None))]
+    fn gz_curve_from_loading(
+        &self,
+        py: Python<'_>,
+        loading: &crate::python::PyLoadingCondition,
+        heels: Vec<f64>,
+        fixed_trim: Option<f64>,
+    ) -> PyStabilityCurve {
+        let vessel = self.vessel.borrow(py);
+        let calc = RustStabCalc::new(&vessel.inner, self.water_density);
+        let curve = calc.gz_curve_from_loading(&loading.inner, &heels, fixed_trim);
+        PyStabilityCurve { inner: curve }
+    }
+
+    /// Calculate complete stability analysis for a given LoadingCondition.
+    ///
+    /// Automatically applies tank fill overrides, uses solid displacement,
+    /// and restores original fill levels to avoid double counting.
+    ///
+    /// Args:
+    ///     loading: LoadingCondition to analyze
+    ///     heels: List of heel angles in degrees
+    ///     fixed_trim: Optional fixed trim in degrees
+    ///
+    /// Returns:
+    ///     CompleteStabilityResult
+    #[pyo3(signature = (loading, heels, fixed_trim=None))]
+    fn complete_stability_from_loading(
+        &self,
+        py: Python<'_>,
+        loading: &crate::python::PyLoadingCondition,
+        heels: Vec<f64>,
+        fixed_trim: Option<f64>,
+    ) -> PyCompleteStabilityResult {
+        let vessel = self.vessel.borrow(py);
+        let calc = RustStabCalc::new(&vessel.inner, self.water_density);
+        let result = calc.complete_stability_from_loading(&loading.inner, &heels, fixed_trim);
         result.into()
     }
 }
@@ -2752,8 +2829,8 @@ impl PyLoadingCondition {
     ///
     /// Only tanks listed in tank_fills are modified.
     /// Other tanks keep their current fill level.
-    fn apply(&self, vessel: &mut PyVessel) {
-        self.inner.apply(&mut vessel.inner);
+    fn apply(&self, vessel: &PyVessel) {
+        self.inner.apply(&vessel.inner);
     }
 
     /// Returns the total displacement (masses + tank fluid masses) in kg.
