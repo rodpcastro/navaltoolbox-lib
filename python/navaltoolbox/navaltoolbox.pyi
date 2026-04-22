@@ -1130,6 +1130,25 @@ class HydrostaticsCalculator:
             >>> state = calc.from_displacement(8635000.0, cog=(71.67, 0.0, 7.555))
         """
         ...
+        
+    def from_loading(
+        self,
+        loading: LoadingCondition,
+        num_stations: int | None = None,
+    ) -> HydrostaticState:
+        """Calculate hydrostatics directly from a LoadingCondition.
+        
+        Automatically applies tank fill overrides, calculates the equilibrium,
+        and restores the original tank fill levels.
+        
+        Args:
+            loading: LoadingCondition to analyze
+            num_stations: Optional number of stations for sectional area curve
+            
+        Returns:
+            Complete HydrostaticState
+        """
+        ...
     
     @property
     def water_density(self) -> float:
@@ -1318,6 +1337,24 @@ class StabilityCalculator:
         """
         ...
     
+    def gz_curve_from_loading(
+        self,
+        loading: LoadingCondition,
+        heels: list[float],
+        fixed_trim: float | None = None,
+    ) -> StabilityCurve:
+        """Calculate the GZ curve directly from a LoadingCondition.
+        
+        Args:
+            loading: The loading condition defining mass and tank fills.
+            heels: List of heel angles in degrees.
+            fixed_trim: Optional fixed trim in degrees.
+            
+        Returns:
+            StabilityCurve object
+        """
+        ...
+    
     def kn_curve(
         self,
         displacements: List[float],
@@ -1365,6 +1402,24 @@ class StabilityCalculator:
             
         Returns:
             CompleteStabilityResult with hydrostatics, GZ curve, and wind data
+        """
+        ...
+        
+    def complete_stability_from_loading(
+        self,
+        loading: LoadingCondition,
+        heels: list[float],
+        fixed_trim: float | None = None,
+    ) -> CompleteStabilityResult:
+        """Calculate complete stability directly from a LoadingCondition.
+        
+        Args:
+            loading: The loading condition defining mass and tank fills.
+            heels: List of heel angles in degrees.
+            fixed_trim: Optional fixed trim in degrees.
+            
+        Returns:
+            CompleteStabilityResult
         """
         ...
 

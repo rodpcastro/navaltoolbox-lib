@@ -835,8 +835,8 @@ impl<'a> StabilityCalculator<'a> {
         let saved_fills = LoadingCondition::save_tank_fills(self.vessel);
         loading.apply(self.vessel);
 
-        let (item_disp, item_cog) = loading.resolve_items();
-        let curve = self.gz_curve(item_disp, item_cog, heels, None, fixed_trim);
+        let (total_disp, total_cog) = loading.resolve(self.vessel);
+        let curve = self.gz_curve(total_disp, total_cog, heels, None, fixed_trim);
 
         LoadingCondition::restore_tank_fills(self.vessel, &saved_fills);
         curve
@@ -855,8 +855,8 @@ impl<'a> StabilityCalculator<'a> {
         let saved_fills = LoadingCondition::save_tank_fills(self.vessel);
         loading.apply(self.vessel);
 
-        let (item_disp, item_cog) = loading.resolve_items();
-        let result = self.complete_stability(item_disp, item_cog, heels, None, fixed_trim);
+        let (total_disp, total_cog) = loading.resolve(self.vessel);
+        let result = self.complete_stability(total_disp, total_cog, heels, None, fixed_trim);
 
         LoadingCondition::restore_tank_fills(self.vessel, &saved_fills);
         result
