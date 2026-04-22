@@ -184,6 +184,50 @@ class TestLoadingCondition:
         finally:
             Path(path).unlink(missing_ok=True)
 
+    def test_from_csv(self):
+        """Test deserializing from a CSV string."""
+        from navaltoolbox import LoadingCondition
+
+        csv_data = (
+            "Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent\n"
+            "Mass,Lightship,1000.0,10.0,0.0,2.0,Lightship,\n"
+            "Mass,Cargo,500.0,15.0,0.0,3.0,Deadweight,\n"
+            "Tank,Tank_1,,,,,,85.5\n"
+        )
+        lc = LoadingCondition.from_csv(csv_data)
+        
+        assert lc.name == "Imported Loading Condition"
+        assert lc.num_masses() == 2
+        assert lc.num_tank_overrides() == 1
+        
+        masses = lc.get_masses()
+        assert masses[0].name == "Lightship"
+        assert masses[0].mass == 1000.0
+        
+        tanks = lc.get_tank_fills()
+        assert tanks["Tank_1"] == 0.855
+
+    def test_csv_file_io(self):
+        """Test CSV file load."""
+        from navaltoolbox import LoadingCondition
+
+        csv_data = (
+            "Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent\n"
+            "Mass,Test_Mass,2000.0,10.0,0.0,5.0,Other,\n"
+        )
+
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False) as f:
+            path = f.name
+            f.write(csv_data.encode("utf-8"))
+
+        try:
+            lc = LoadingCondition.load_csv(path)
+            # The name becomes the file stem
+            assert lc.num_masses() == 1
+            assert lc.get_masses()[0].name == "Test_Mass"
+        finally:
+            Path(path).unlink(missing_ok=True)
+
     def test_copy(self):
         """Test copy with optional new name."""
         from navaltoolbox import LoadingCondition

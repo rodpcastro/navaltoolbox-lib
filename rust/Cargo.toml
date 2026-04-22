@@ -44,6 +44,7 @@ rhai = { version = "1.19", features = ["sync", "serde"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 meshopt = "0.6"
+csv = "1.4.0"
 
 # Python bindings (optional)
 [dependencies.pyo3]

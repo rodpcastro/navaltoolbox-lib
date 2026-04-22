@@ -2908,6 +2908,22 @@ impl PyLoadingCondition {
             .map_err(|e| PyIOError::new_err(format!("Failed to load JSON: {}", e)))
     }
 
+    /// Deserialize from CSV string.
+    #[staticmethod]
+    fn from_csv(csv_str: &str) -> PyResult<Self> {
+        RustLoadingCondition::from_csv(csv_str)
+            .map(|lc| Self { inner: lc })
+            .map_err(|e| PyValueError::new_err(format!("CSV error: {}", e)))
+    }
+
+    /// Load from CSV file.
+    #[staticmethod]
+    fn load_csv(path: &str) -> PyResult<Self> {
+        RustLoadingCondition::from_csv_file(std::path::Path::new(path))
+            .map(|lc| Self { inner: lc })
+            .map_err(|e| PyIOError::new_err(format!("Failed to load CSV: {}", e)))
+    }
+
     // ── Copy ─────────────────────────────────────────────
 
     /// Create a copy, optionally with a new name.

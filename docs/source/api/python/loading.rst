@@ -215,6 +215,27 @@ LoadingCondition
 
       Load from JSON file.
 
+   .. py:staticmethod:: from_csv(csv_str)
+
+      Deserialize from CSV string. A unified CSV format is used to handle both Mass Items and Tank Fill Overrides.
+
+      **CSV Format Example:**
+
+      .. code-block:: csv
+
+         Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent
+         Mass,Lightship,5000000.0,45.0,0.0,4.5,Lightship,
+         Mass,Crew,3000.0,35.0,0.0,8.0,Other,
+         Tank,FO_1P,,,,,,95.0
+
+      :rtype: LoadingCondition
+
+   .. py:staticmethod:: load_csv(path)
+
+      Load from CSV file. Uses the same unified format as ``from_csv``.
+
+      :rtype: LoadingCondition
+
    .. py:method:: copy(name=None)
 
       Create a copy, optionally with a new name.

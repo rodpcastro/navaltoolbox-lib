@@ -1890,6 +1890,16 @@ class LoadingCondition:
     def load_json(path: str) -> "LoadingCondition":
         """Load from JSON file."""
         ...
+        
+    @staticmethod
+    def from_csv(csv_str: str) -> "LoadingCondition":
+        """Deserialize from CSV string."""
+        ...
+        
+    @staticmethod
+    def load_csv(path: str) -> "LoadingCondition":
+        """Load from CSV file."""
+        ...
     
     def copy(self, name: str | None = None) -> "LoadingCondition":
         """Create a copy, optionally with a new name."""

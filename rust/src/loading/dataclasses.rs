@@ -346,10 +346,116 @@ impl LoadingCondition {
         Ok(())
     }
 
-    /// Deserializes a loading condition from a JSON file.
     pub fn from_json_file(path: &std::path::Path) -> Result<Self, Box<dyn std::error::Error>> {
         let json = std::fs::read_to_string(path)?;
         let lc = Self::from_json(&json)?;
         Ok(lc)
+    }
+
+    /// Deserializes a loading condition from a CSV string.
+    ///
+    /// Expected format:
+    /// `Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent`
+    pub fn from_csv(csv_content: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        #[derive(Deserialize)]
+        struct CsvRow {
+            #[serde(rename = "Type")]
+            item_type: String,
+            #[serde(rename = "Name")]
+            name: String,
+            #[serde(rename = "Mass")]
+            mass: Option<f64>,
+            #[serde(rename = "LCG")]
+            lcg: Option<f64>,
+            #[serde(rename = "TCG")]
+            tcg: Option<f64>,
+            #[serde(rename = "VCG")]
+            vcg: Option<f64>,
+            #[serde(rename = "Category")]
+            category: Option<String>,
+            #[serde(rename = "FillPercent")]
+            fill_percent: Option<f64>,
+        }
+
+        let mut lc = Self::new("Imported Loading Condition");
+        let mut rdr = csv::Reader::from_reader(csv_content.as_bytes());
+        
+        for result in rdr.deserialize() {
+            let row: CsvRow = result?;
+            match row.item_type.to_lowercase().as_str() {
+                "mass" => {
+                    let mass = row.mass.unwrap_or(0.0);
+                    let lcg = row.lcg.unwrap_or(0.0);
+                    let tcg = row.tcg.unwrap_or(0.0);
+                    let vcg = row.vcg.unwrap_or(0.0);
+                    let mut item = MassItem::new(&row.name, mass, [lcg, tcg, vcg]);
+                    
+                    if let Some(cat_str) = row.category {
+                        let cat = match cat_str.to_lowercase().as_str() {
+                            "lightship" => MassCategory::Lightship,
+                            "deadweight" => MassCategory::Deadweight,
+                            _ => MassCategory::Other,
+                        };
+                        item = item.with_category(cat);
+                    }
+                    lc.add_mass(item);
+                }
+                "tank" => {
+                    if let Some(fill) = row.fill_percent {
+                        lc.set_tank_fill_percent(&row.name, fill);
+                    }
+                }
+                _ => { /* Ignore unknown types */ }
+            }
+        }
+        Ok(lc)
+    }
+
+    /// Deserializes a loading condition from a CSV file.
+    pub fn from_csv_file(path: &std::path::Path) -> Result<Self, Box<dyn std::error::Error>> {
+        let content = std::fs::read_to_string(path)?;
+        let mut lc = Self::from_csv(&content)?;
+        
+        // Use the filename as the loading condition name
+        if let Some(file_stem) = path.file_stem() {
+            if let Some(name_str) = file_stem.to_str() {
+                lc.name = name_str.to_string();
+            }
+        }
+        Ok(lc)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_from_csv() {
+        let csv_data = "Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent
+Mass,Lightship,1000.0,10.0,0.0,2.0,Lightship,
+Mass,Cargo,500.0,15.0,0.0,3.0,Deadweight,
+Tank,Tank_1,,,,,,85.5
+Tank,Tank_2,,,,,,10.0";
+
+        let lc = LoadingCondition::from_csv(csv_data).unwrap();
+
+        assert_eq!(lc.name, "Imported Loading Condition");
+        assert_eq!(lc.num_masses(), 2);
+        assert_eq!(lc.num_tank_overrides(), 2);
+
+        assert_eq!(lc.masses()[0].name, "Lightship");
+        assert_eq!(lc.masses()[0].mass, 1000.0);
+        assert_eq!(lc.masses()[0].cog, [10.0, 0.0, 2.0]);
+        assert_eq!(lc.masses()[0].category, MassCategory::Lightship);
+
+        assert_eq!(lc.masses()[1].name, "Cargo");
+        assert_eq!(lc.masses()[1].mass, 500.0);
+        assert_eq!(lc.masses()[1].cog, [15.0, 0.0, 3.0]);
+        assert_eq!(lc.masses()[1].category, MassCategory::Deadweight);
+
+        let tanks = lc.tank_fills();
+        assert_eq!(tanks.get("Tank_1"), Some(&0.855)); // Stored as 0.0 to 1.0 (85.5 / 100.0)
+        assert_eq!(tanks.get("Tank_2"), Some(&0.1));
     }
 }
