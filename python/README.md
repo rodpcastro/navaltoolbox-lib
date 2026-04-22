@@ -127,6 +127,10 @@ lc = LoadingCondition("Arrival")
 lc.add_mass_simple("Lightship", 5000000.0, (40.0, 0.0, 5.0), MassCategory.lightship())
 lc.set_tank_fill_percent("FO_1", 50.0)
 
+# Import/Export (JSON or CSV)
+# lc.save_json("arrival.json")
+# lc2 = LoadingCondition.load_csv("departure.csv")
+
 # Use convenience methods directly to seamlessly merge the solid masses and tank configurations:
 from navaltoolbox import StabilityCalculator, HydrostaticsCalculator
 

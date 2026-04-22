@@ -79,6 +79,10 @@ from navaltoolbox import LoadingCondition, MassCategory
 lc = LoadingCondition("Departure")
 lc.add_mass_simple("Lightship", 5000000.0, (40.0, 0.0, 5.0), MassCategory.lightship())
 
+# You can also import loading conditions from JSON or a unified CSV format:
+# lc = LoadingCondition.from_csv('Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent\nMass,Cargo,1000,10,0,5,Deadweight,\nTank,FO_1P,,,,,,95.0')
+# lc = LoadingCondition.load_csv("my_loading_condition.csv")
+
 # Calculate GZ curve directly from LoadingCondition
 stab = StabilityCalculator(vessel, water_density=1025.0)
 heels = [0, 10, 20, 30, 40, 50, 60]
