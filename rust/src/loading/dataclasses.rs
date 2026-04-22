@@ -215,10 +215,31 @@ impl LoadingCondition {
     ///
     /// Only tanks whose names appear in `tank_fills` are modified.
     /// Other tanks keep their current fill level.
-    pub fn apply(&self, vessel: &mut Vessel) {
+    pub fn apply(&self, vessel: &Vessel) {
         for (tank_name, &fill_level) in &self.tank_fills {
             if let Some(tank) = vessel.get_tank_by_name(tank_name) {
                 tank.write().unwrap().set_fill_level(fill_level);
+            }
+        }
+    }
+
+    /// Saves the current fill levels of all tanks in the vessel.
+    /// Useful for operations that temporarily apply a LoadingCondition.
+    pub fn save_tank_fills(vessel: &Vessel) -> HashMap<String, f64> {
+        let mut saved = HashMap::new();
+        for tank_arc in vessel.tanks() {
+            let tank = tank_arc.read().unwrap();
+            saved.insert(tank.name().to_string(), tank.fill_level());
+        }
+        saved
+    }
+
+    /// Restores tank fill levels from a saved snapshot.
+    pub fn restore_tank_fills(vessel: &Vessel, saved: &HashMap<String, f64>) {
+        for tank_arc in vessel.tanks() {
+            let mut tank = tank_arc.write().unwrap();
+            if let Some(&fill) = saved.get(tank.name()) {
+                tank.set_fill_level(fill);
             }
         }
     }

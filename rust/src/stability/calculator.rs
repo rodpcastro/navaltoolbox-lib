@@ -22,6 +22,7 @@
 use super::complete::{CompleteStabilityResult, WindHeelingData};
 use super::{StabilityCurve, StabilityPoint};
 use crate::hydrostatics::HydrostaticsCalculator;
+use crate::loading::LoadingCondition;
 use crate::mesh::{clip_at_waterline, transform_mesh, transform_point};
 use crate::vessel::Vessel;
 use nalgebra::Point3;
@@ -816,6 +817,49 @@ impl<'a> StabilityCalculator<'a> {
         };
 
         CompleteStabilityResult::new(hydrostatics, gz_curve, wind_data, displacement_mass, cog)
+    }
+
+    /// Calculate the GZ curve for a given LoadingCondition.
+    ///
+    /// This method simplifies the workflow by automatically:
+    /// 1. Saving the current tank fill levels.
+    /// 2. Applying the LoadingCondition's tank fill overrides.
+    /// 3. Calculating the GZ curve with the solid mass only (avoiding double-counting tanks).
+    /// 4. Restoring the tank fill levels to their original state.
+    pub fn gz_curve_from_loading(
+        &self,
+        loading: &LoadingCondition,
+        heels: &[f64],
+        fixed_trim: Option<f64>,
+    ) -> StabilityCurve {
+        let saved_fills = LoadingCondition::save_tank_fills(self.vessel);
+        loading.apply(self.vessel);
+
+        let (item_disp, item_cog) = loading.resolve_items();
+        let curve = self.gz_curve(item_disp, item_cog, heels, None, fixed_trim);
+
+        LoadingCondition::restore_tank_fills(self.vessel, &saved_fills);
+        curve
+    }
+
+    /// Calculate complete stability analysis for a given LoadingCondition.
+    ///
+    /// Combines hydrostatic calculations, GZ curve, and wind heeling data.
+    /// Safely applies the LoadingCondition's tank overrides and restores them after.
+    pub fn complete_stability_from_loading(
+        &self,
+        loading: &LoadingCondition,
+        heels: &[f64],
+        fixed_trim: Option<f64>,
+    ) -> CompleteStabilityResult {
+        let saved_fills = LoadingCondition::save_tank_fills(self.vessel);
+        loading.apply(self.vessel);
+
+        let (item_disp, item_cog) = loading.resolve_items();
+        let result = self.complete_stability(item_disp, item_cog, heels, None, fixed_trim);
+
+        LoadingCondition::restore_tank_fills(self.vessel, &saved_fills);
+        result
     }
 }
 
