@@ -21,6 +21,7 @@
 
 use super::HydrostaticState;
 use crate::mesh::{clip_at_waterline, get_bounds, transform_mesh};
+use crate::loading::LoadingCondition;
 use crate::vessel::Vessel;
 use nalgebra::{Point3, Rotation3, Vector3};
 use parry3d_f64::shape::Shape;
@@ -896,6 +897,37 @@ impl<'a> HydrostaticsCalculator<'a> {
         }
 
         Err("Failed to find equilibrium state".to_string())
+    }
+
+    /// Calculate hydrostatics for a given LoadingCondition.
+    ///
+    /// This method simplifies the workflow by automatically:
+    /// 1. Saving the current tank fill levels.
+    /// 2. Applying the LoadingCondition's tank fill overrides.
+    /// 3. Calculating equilibrium state with the total displacement and COG.
+    /// 4. Restoring the tank fill levels to their original state.
+    pub fn from_loading(
+        &self,
+        loading: &LoadingCondition,
+        num_stations: Option<usize>,
+    ) -> Result<HydrostaticState, String> {
+        let saved_fills = LoadingCondition::save_tank_fills(self.vessel);
+        loading.apply(self.vessel);
+
+        let (total_disp, total_cog) = loading.resolve(self.vessel);
+        
+        let result = self.from_displacement(
+            total_disp,
+            None,
+            Some(total_cog),
+            None,
+            None,
+            num_stations,
+            None,
+        );
+
+        LoadingCondition::restore_tank_fills(self.vessel, &saved_fills);
+        result
     }
 
     /// Primary equilibrium solver using Newton-Raphson (fast but can diverge)

@@ -63,6 +63,9 @@ from .navaltoolbox import (
     Appendage,
     DeckEdge,
     DeckEdgeSide,
+    MassCategory,
+    MassItem,
+    LoadingCondition,
 )
 
 __all__ = [
@@ -87,4 +90,7 @@ __all__ = [
     "Appendage",
     "DeckEdge",
     "DeckEdgeSide",
+    "MassCategory",
+    "MassItem",
+    "LoadingCondition",
 ]

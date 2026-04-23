@@ -19,6 +19,7 @@ NavalToolbox is built as a **Rust library** (`navaltoolbox`) with optional Pytho
 - **Stability**: GZ curve calculation with trim optimization and downflooding detection
 - **Complete stability analysis**: Combines hydrostatics, GZ curve, and wind heeling data
 - **Tanks**: Fill level management, free surface effects
+- **Loading Conditions**: Aggregate mass items and tank fill overrides for operational profiles
 - **Silhouettes**: Wind heeling calculations (DXF/VTK support)
 - **Verification**: Rhai scripting engine for custom stability criteria (IMO, localized rules)
 - **Visualization**: Interactive 3D visualization using Plotly (Vessel, Tanks, Opening, Hydrostatics)
@@ -72,23 +73,26 @@ print(f"Draft: {state_disp.draft:.3f} m")
 state_drafts = calc.from_drafts(draft_ap=6.0, draft_fp=4.0)
 print(f"Trim: {state_drafts.trim:.2f}°")
 
-# Calculate GZ curve
+# Loading Condition
+from navaltoolbox import LoadingCondition, MassCategory
+
+lc = LoadingCondition("Departure")
+lc.add_mass_simple("Lightship", 5000000.0, (40.0, 0.0, 5.0), MassCategory.lightship())
+
+# You can also import loading conditions from JSON or a unified CSV format:
+# lc = LoadingCondition.from_csv('Type,Name,Mass,LCG,TCG,VCG,Category,FillPercent\nMass,Cargo,1000,10,0,5,Deadweight,\nTank,FO_1P,,,,,,95.0')
+# lc = LoadingCondition.load_csv("my_loading_condition.csv")
+
+# Calculate GZ curve directly from LoadingCondition
 stab = StabilityCalculator(vessel, water_density=1025.0)
 heels = [0, 10, 20, 30, 40, 50, 60]
-curve = stab.gz_curve(
-    displacement_mass=1000000,
-    cog=(50.0, 0.0, 5.0),
-    heels=heels
-)
+
+curve = stab.gz_curve_from_loading(lc, heels)
 for heel, gz in zip(curve.heels(), curve.values()):
     print(f"Heel: {heel}°, GZ: {gz:.3f}m")
 
 # Complete stability analysis (hydrostatics + GZ + wind data)
-result = stab.complete_stability(
-    displacement_mass=1000000,
-    cog=(50.0, 0.0, 5.0),
-    heels=heels
-)
+result = stab.complete_stability_from_loading(lc, heels)
 print(f"GM0: {result.gm0:.3f}m")
 print(f"Max GZ: {result.max_gz:.3f}m at {result.heel_at_max_gz}°")
 

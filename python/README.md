@@ -18,6 +18,7 @@ NavalToolbox provides fast and accurate naval architecture calculations through 
 - ⚖️ **Stability Analysis**: GZ curve calculation with automatic trim optimization
 - 🌊 **Downflooding Detection**: Automatic detection of submerged openings
 - 🛢️ **Tank Management**: Fill levels, free surface effects, sounding tables
+- ⚖️ **Loading Conditions**: Compose mass inventories and tank overrides to build operational profiles
 - 💨 **Wind Heeling**: Silhouette-based wind calculations (DXF/VTK support)
 - 📝 **Scriptable Verification**: Rhai scripting engine for custom stability criteria
 - 🧊 **3D Visualization**: Interactive vessel and hydrostatic visualization with Plotly
@@ -110,6 +111,36 @@ max_gz = max(gz_values)
 max_idx = gz_values.index(max_gz)
 max_heel = heels[max_idx]
 print(f"\nMax GZ: {max_gz:.3f}m at {max_heel}°")
+```
+
+### Loading Conditions
+
+```python
+from navaltoolbox import Hull, Vessel, Tank, LoadingCondition, MassCategory
+
+# Create vessel with a tank
+vessel = Vessel(Hull("ship.stl"))
+vessel.add_tank(Tank.from_box("FO_1", 20.0, 30.0, -5.0, 5.0, 0.0, 2.0, 1000.0))
+
+# Define loading condition
+lc = LoadingCondition("Arrival")
+lc.add_mass_simple("Lightship", 5000000.0, (40.0, 0.0, 5.0), MassCategory.lightship())
+lc.set_tank_fill_percent("FO_1", 50.0)
+
+# Import/Export (JSON or CSV)
+# lc.save_json("arrival.json")
+# lc2 = LoadingCondition.load_csv("departure.csv")
+
+# Use convenience methods directly to seamlessly merge the solid masses and tank configurations:
+from navaltoolbox import StabilityCalculator, HydrostaticsCalculator
+
+stab_calc = StabilityCalculator(vessel)
+curve = stab_calc.gz_curve_from_loading(lc, heels=[0, 10, 20, 30])
+print(f"Calculated GZ max: {max(curve.values()):.3f} m")
+
+hydro_calc = HydrostaticsCalculator(vessel)
+state = hydro_calc.from_loading(lc)
+print(f"Equilibrium Draft: {state.draft:.3f} m")
 ```
 
 ## Documentation

@@ -38,6 +38,10 @@ Key Features
            <h3>📐 Complete</h3>
            <p>Hull, Vessel, Tanks, Hydrostatics, Stability modules. Supports multi-hull configurations.</p>
        </div>
+       <div class="feature-card">
+           <h3>⚖️ Loading Conditions</h3>
+           <p>Compose mass inventories and tank overrides to build operational profiles.</p>
+       </div>
    </div>
 
 Quick Example
