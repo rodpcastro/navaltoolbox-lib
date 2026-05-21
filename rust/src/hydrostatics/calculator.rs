@@ -20,8 +20,8 @@
 //! Calculates hydrostatic properties for vessel geometries.
 
 use super::HydrostaticState;
-use crate::mesh::{clip_at_waterline, get_bounds, transform_mesh};
 use crate::loading::LoadingCondition;
+use crate::mesh::{clip_at_waterline, get_bounds, transform_mesh};
 use crate::vessel::Vessel;
 use nalgebra::{Point3, Rotation3, Vector3};
 use parry3d_f64::shape::Shape;
@@ -915,7 +915,7 @@ impl<'a> HydrostaticsCalculator<'a> {
         loading.apply(self.vessel);
 
         let (total_disp, total_cog) = loading.resolve(self.vessel);
-        
+
         let result = self.from_displacement(
             total_disp,
             None,

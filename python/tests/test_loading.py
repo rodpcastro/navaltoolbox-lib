@@ -195,15 +195,15 @@ class TestLoadingCondition:
             "Tank,Tank_1,,,,,,85.5\n"
         )
         lc = LoadingCondition.from_csv(csv_data)
-        
+
         assert lc.name == "Imported Loading Condition"
         assert lc.num_masses() == 2
         assert lc.num_tank_overrides() == 1
-        
+
         masses = lc.get_masses()
         assert masses[0].name == "Lightship"
         assert masses[0].mass == 1000.0
-        
+
         tanks = lc.get_tank_fills()
         assert tanks["Tank_1"] == 0.855
 
@@ -255,7 +255,13 @@ class TestLoadingCondition:
 
     def test_from_loading_restores_fills(self):
         """Test that from_loading methods restore the tank fills."""
-        from navaltoolbox import LoadingCondition, Hull, Vessel, Tank, HydrostaticsCalculator
+        from navaltoolbox import (
+            LoadingCondition,
+            Hull,
+            Vessel,
+            Tank,
+            HydrostaticsCalculator,
+        )
 
         hull = Hull.from_box(length=100.0, breadth=20.0, depth=10.0)
         vessel = Vessel(hull)
@@ -274,8 +280,14 @@ class TestLoadingCondition:
         assert abs(vessel.get_tanks()[0].fill_percent - 25.0) < 1e-6
 
     def test_gz_curve_from_loading(self):
-        """Test gz_curve_from_loading matches manual resolve_items workflow."""
-        from navaltoolbox import LoadingCondition, Hull, Vessel, Tank, StabilityCalculator
+        """Test gz_curve matches manual resolve_items workflow."""
+        from navaltoolbox import (
+            LoadingCondition,
+            Hull,
+            Vessel,
+            Tank,
+            StabilityCalculator,
+        )
 
         hull = Hull.from_box(length=100.0, breadth=20.0, depth=10.0)
         vessel = Vessel(hull)
@@ -288,13 +300,19 @@ class TestLoadingCondition:
 
         calc = StabilityCalculator(vessel)
         heels = [0.0, 10.0, 20.0]
-        
+
         curve = calc.gz_curve_from_loading(lc, heels)
         assert len(curve.values()) == 3
 
     def test_from_loading_hydrostatics(self):
-        """Test from_loading matches manual resolve workflow for hydrostatics."""
-        from navaltoolbox import LoadingCondition, Hull, Vessel, Tank, HydrostaticsCalculator
+        """Test from_loading matches manual resolve workflow."""
+        from navaltoolbox import (
+            LoadingCondition,
+            Hull,
+            Vessel,
+            Tank,
+            HydrostaticsCalculator,
+        )
 
         hull = Hull.from_box(length=100.0, breadth=20.0, depth=10.0)
         vessel = Vessel(hull)
@@ -307,7 +325,7 @@ class TestLoadingCondition:
 
         calc = HydrostaticsCalculator(vessel)
         state1 = calc.from_loading(lc)
-        
+
         # Manual apply and resolve
         lc.apply(vessel)
         disp, cog = lc.resolve(vessel)

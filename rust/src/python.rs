@@ -1675,7 +1675,7 @@ impl PyHydrostaticsCalculator {
         num_stations: Option<usize>,
     ) -> PyResult<PyHydrostaticState> {
         let calc = RustHydroCalc::new(&self.vessel, self.water_density);
-        
+
         calc.from_loading(&loading.inner, num_stations)
             .map(|s| s.into())
             .map_err(|e| PyValueError::new_err(e))

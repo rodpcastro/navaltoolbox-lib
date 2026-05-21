@@ -379,7 +379,7 @@ impl LoadingCondition {
 
         let mut lc = Self::new("Imported Loading Condition");
         let mut rdr = csv::Reader::from_reader(csv_content.as_bytes());
-        
+
         for result in rdr.deserialize() {
             let row: CsvRow = result?;
             match row.item_type.to_lowercase().as_str() {
@@ -389,7 +389,7 @@ impl LoadingCondition {
                     let tcg = row.tcg.unwrap_or(0.0);
                     let vcg = row.vcg.unwrap_or(0.0);
                     let mut item = MassItem::new(&row.name, mass, [lcg, tcg, vcg]);
-                    
+
                     if let Some(cat_str) = row.category {
                         let cat = match cat_str.to_lowercase().as_str() {
                             "lightship" => MassCategory::Lightship,
@@ -415,7 +415,7 @@ impl LoadingCondition {
     pub fn from_csv_file(path: &std::path::Path) -> Result<Self, Box<dyn std::error::Error>> {
         let content = std::fs::read_to_string(path)?;
         let mut lc = Self::from_csv(&content)?;
-        
+
         // Use the filename as the loading condition name
         if let Some(file_stem) = path.file_stem() {
             if let Some(name_str) = file_stem.to_str() {
