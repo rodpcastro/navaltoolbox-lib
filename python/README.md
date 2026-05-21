@@ -13,11 +13,13 @@ NavalToolbox provides fast and accurate naval architecture calculations through 
 ## Features
 
 - ⚓ **Hull Geometry**: Load and manipulate ship hulls from STL/VTK files
-- 🚢 **Multi-hull Support**: Catamarans, trimarans, and arbitrary configurations
+- 🚢 **Multi-hull Support**: Catamarans, trimarans, and arbitrary configurations with contact surface detection
 - 📊 **Hydrostatics**: Volume, COB, Waterplane ($A_{wp}$, LCF, $BM_t$, $BM_l$), Free Surface Correction ($GM_{dry}/GM_{wet}$)
 - ⚖️ **Stability Analysis**: GZ curve calculation with automatic trim optimization
 - 🌊 **Downflooding Detection**: Automatic detection of submerged openings
 - 🛢️ **Tank Management**: Fill levels, free surface effects, sounding tables
+- 📎 **Appendages**: Add arbitrary geometry (STL/VTK) or primitive shapes for volume and buoyancy contributions
+- 📏 **Deck Edges**: Define deck edge contours (livet) for freeboard calculation and deck immersion point detection
 - ⚖️ **Loading Conditions**: Compose mass inventories and tank overrides to build operational profiles
 - 💨 **Wind Heeling**: Silhouette-based wind calculations (DXF/VTK support)
 - 📝 **Scriptable Verification**: Rhai scripting engine for custom stability criteria
