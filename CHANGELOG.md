@@ -5,6 +5,21 @@ All notable changes to NavalToolbox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.0] - 2026-05-22
+
+### Added
+- **loading**: Add CSV import support for loading conditions.
+- **python**: Add `from_loading` bindings to calculators.
+- **testing**: Add tests for `from_loading` calculator methods.
+
+### Changed
+- **docs**: Add CSV import to READMEs and a downloadable CSV template for loading conditions.
+- **docs**: Update stability and hydrostatics documentation for `from_loading`.
+- **style**: Fix linting issues.
+
+### Fixed
+- **rust**: Use total displacement in `from_loading` for proper hydrostatics reporting.
+
 ## [0.8.0] - 2026-03-06
 
 ### Added
