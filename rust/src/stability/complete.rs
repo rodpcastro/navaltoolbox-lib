@@ -30,7 +30,10 @@ pub struct WindHeelingData {
     pub emerged_area: f64,
     /// Centroid of emerged area [x, z] in meters
     pub emerged_centroid: [f64; 2],
-    /// Lever arm from waterline to centroid z coordinate (m)
+    /// Centroid of submerged lateral area [x, z] in meters
+    pub submerged_centroid: [f64; 2],
+    /// Lever arm Z per IS Code 2008 §2.3.2:
+    /// vertical distance from centre of emerged area to centre of underwater lateral area (m)
     pub wind_lever_arm: f64,
     /// Waterline Z at which calculations were performed
     pub waterline_z: f64,
@@ -38,11 +41,24 @@ pub struct WindHeelingData {
 
 impl WindHeelingData {
     /// Create new wind heeling data.
-    pub fn new(emerged_area: f64, emerged_centroid: [f64; 2], waterline_z: f64) -> Self {
-        let wind_lever_arm = emerged_centroid[1] - waterline_z;
+    ///
+    /// Computes `wind_lever_arm` as the exact vertical distance between the
+    /// centroid of the emerged lateral area and the centroid of the submerged
+    /// lateral area, per IMO 2008 IS Code §2.3.2:
+    ///
+    /// > Z = vertical distance from the centre of A to the centre of the
+    /// > underwater lateral area.
+    pub fn new(
+        emerged_area: f64,
+        emerged_centroid: [f64; 2],
+        submerged_centroid: [f64; 2],
+        waterline_z: f64,
+    ) -> Self {
+        let wind_lever_arm = emerged_centroid[1] - submerged_centroid[1];
         Self {
             emerged_area,
             emerged_centroid,
+            submerged_centroid,
             wind_lever_arm,
             waterline_z,
         }

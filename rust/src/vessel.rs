@@ -409,6 +409,36 @@ impl Vessel {
         [cx / total_area, cz / total_area]
     }
 
+    /// Calculates the combined centroid of all submerged lateral areas.
+    ///
+    /// Returns the area-weighted centroid [x, z] of the underwater portions
+    /// of all silhouettes. Used for the exact Z lever computation per
+    /// IMO 2008 IS Code §2.3.2: Z = emerged_centroid_z - submerged_centroid_z.
+    pub fn get_combined_submerged_centroid(&self, waterline_z: f64) -> [f64; 2] {
+        let total_area: f64 = self
+            .silhouettes
+            .iter()
+            .map(|s| s.get_submerged_area(waterline_z))
+            .sum();
+
+        if total_area < 1e-9 {
+            return [0.0, 0.0];
+        }
+
+        let mut cx = 0.0;
+        let mut cz = 0.0;
+        for s in &self.silhouettes {
+            let area = s.get_submerged_area(waterline_z);
+            if area > 1e-9 {
+                let centroid = s.get_submerged_centroid(waterline_z);
+                cx += centroid[0] * area;
+                cz += centroid[1] * area;
+            }
+        }
+
+        [cx / total_area, cz / total_area]
+    }
+
     // =========================================================================
     // Appendage Management
     // =========================================================================

@@ -233,6 +233,24 @@ impl Silhouette {
         Self::polygon_centroid(&clipped)
     }
 
+    /// Calculate the submerged area (below waterline) in m².
+    ///
+    /// Clips the silhouette at the given waterline Z and returns
+    /// the area of the portion below the waterline.
+    pub fn get_submerged_area(&self, waterline_z: f64) -> f64 {
+        let clipped = self.clip_below(waterline_z);
+        Self::polygon_area(&clipped)
+    }
+
+    /// Calculate the centroid of the submerged area.
+    ///
+    /// Returns [x_center, z_center] of the area below waterline.
+    /// Used for the exact Z computation per IMO 2008 IS Code §2.3.2.
+    pub fn get_submerged_centroid(&self, waterline_z: f64) -> [f64; 2] {
+        let clipped = self.clip_below(waterline_z);
+        Self::polygon_centroid(&clipped)
+    }
+
     /// Clip the silhouette to keep only points above the waterline.
     fn clip_above(&self, waterline_z: f64) -> Vec<[f64; 2]> {
         if self.points.len() < 2 {
@@ -268,6 +286,46 @@ impl Silhouette {
                 result.push([x_int, waterline_z]);
             }
             // Both below - skip
+        }
+
+        result
+    }
+
+    /// Clip the silhouette to keep only points below the waterline.
+    fn clip_below(&self, waterline_z: f64) -> Vec<[f64; 2]> {
+        if self.points.len() < 2 {
+            return Vec::new();
+        }
+
+        let mut result: Vec<[f64; 2]> = Vec::new();
+        let n = self.points.len();
+
+        for i in 0..n {
+            let j = (i + 1) % n;
+            let p1 = [self.points[i][0], self.points[i][2]];
+            let p2 = [self.points[j][0], self.points[j][2]];
+
+            let z1 = p1[1];
+            let z2 = p2[1];
+
+            // Both below
+            if z1 <= waterline_z && z2 <= waterline_z {
+                result.push(p1);
+            }
+            // p1 below, p2 above - add p1 and intersection
+            else if z1 <= waterline_z && z2 > waterline_z {
+                result.push(p1);
+                let t = (waterline_z - z1) / (z2 - z1);
+                let x_int = p1[0] + t * (p2[0] - p1[0]);
+                result.push([x_int, waterline_z]);
+            }
+            // p1 above, p2 below - add intersection
+            else if z1 > waterline_z && z2 <= waterline_z {
+                let t = (waterline_z - z1) / (z2 - z1);
+                let x_int = p1[0] + t * (p2[0] - p1[0]);
+                result.push([x_int, waterline_z]);
+            }
+            // Both above - skip
         }
 
         result
@@ -395,5 +453,32 @@ mod tests {
         let points = vec![[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [10.0, 0.0, 0.0]];
         let s = Silhouette::new(points, "flat".to_string());
         assert!(s.get_area() < 1e-6);
+    }
+
+    #[test]
+    fn test_emerged_and_submerged_equivalence() {
+        let rect = create_rectangle(0.0, 100.0, 0.0, 20.0);
+
+        // Fully emerged (waterline at 0.0) vs fully submerged (waterline at 25.0)
+        let emerged_area = rect.get_emerged_area(0.0);
+        let submerged_area = rect.get_submerged_area(25.0);
+
+        assert!(
+            (emerged_area - submerged_area).abs() < 1e-6,
+            "Fully emerged area ({}) should equal fully submerged area ({})",
+            emerged_area,
+            submerged_area
+        );
+
+        let emerged_centroid = rect.get_emerged_centroid(0.0);
+        let submerged_centroid = rect.get_submerged_centroid(25.0);
+
+        assert!(
+            (emerged_centroid[0] - submerged_centroid[0]).abs() < 1e-6
+                && (emerged_centroid[1] - submerged_centroid[1]).abs() < 1e-6,
+            "Fully emerged centroid ({:?}) should equal fully submerged centroid ({:?})",
+            emerged_centroid,
+            submerged_centroid
+        );
     }
 }

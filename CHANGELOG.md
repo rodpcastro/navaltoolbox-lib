@@ -5,6 +5,15 @@ All notable changes to NavalToolbox will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- **stability**: Implement exact wind lever arm calculation using submerged and emerged lateral area centroids per IMO 2008 IS Code §2.3.2.
+- **python**: Expose `submerged_centroid` property in `WindHeelingData` Python bindings.
+
+### Changed
+- **docs**: Update stability tutorial and API documentation with exact wind lever arm formulation.
+
 ## [0.9.0] - 2026-05-22
 
 ### Added

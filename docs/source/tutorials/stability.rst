@@ -233,6 +233,8 @@ Wind Heeling
 
 Wind heeling moments are calculated based on the lateral projected area of the vessel's superstructure (silhouette).
 
+Per IMO 2008 IS Code §2.3.2, the wind lever arm :math:`Z` is calculated as the exact vertical distance between the centroid of the emerged lateral area (above the waterline) and the centroid of the submerged lateral area (below the waterline).
+
 .. code-block:: python
 
     from navaltoolbox import Silhouette
