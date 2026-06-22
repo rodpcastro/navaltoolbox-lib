@@ -65,7 +65,6 @@ impl WindHeelingData {
     }
 }
 
-
 /// Complete stability calculation result.
 ///
 /// Combines hydrostatic properties, GZ curve, and wind heeling data

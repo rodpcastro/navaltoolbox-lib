@@ -458,25 +458,27 @@ mod tests {
     #[test]
     fn test_emerged_and_submerged_equivalence() {
         let rect = create_rectangle(0.0, 100.0, 0.0, 20.0);
-        
+
         // Fully emerged (waterline at 0.0) vs fully submerged (waterline at 25.0)
         let emerged_area = rect.get_emerged_area(0.0);
         let submerged_area = rect.get_submerged_area(25.0);
-        
+
         assert!(
             (emerged_area - submerged_area).abs() < 1e-6,
             "Fully emerged area ({}) should equal fully submerged area ({})",
-            emerged_area, submerged_area
+            emerged_area,
+            submerged_area
         );
 
         let emerged_centroid = rect.get_emerged_centroid(0.0);
         let submerged_centroid = rect.get_submerged_centroid(25.0);
-        
+
         assert!(
-            (emerged_centroid[0] - submerged_centroid[0]).abs() < 1e-6 &&
-            (emerged_centroid[1] - submerged_centroid[1]).abs() < 1e-6,
+            (emerged_centroid[0] - submerged_centroid[0]).abs() < 1e-6
+                && (emerged_centroid[1] - submerged_centroid[1]).abs() < 1e-6,
             "Fully emerged centroid ({:?}) should equal fully submerged centroid ({:?})",
-            emerged_centroid, submerged_centroid
+            emerged_centroid,
+            submerged_centroid
         );
     }
 }
