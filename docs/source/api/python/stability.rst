@@ -195,10 +195,15 @@ WindHeelingData
 
       Centroid of emerged area (x, z) in meters.
 
+   .. py:attribute:: submerged_centroid
+      :type: tuple[float, float]
+
+      Centroid of submerged lateral area (x, z) in meters.
+
    .. py:attribute:: wind_lever_arm
       :type: float
 
-      Lever arm from waterline to centroid z coordinate (m).
+      Lever arm Z representing the exact vertical distance between the emerged centroid and the submerged centroid (m), per IMO 2008 IS Code §2.3.2.
 
    .. py:attribute:: waterline_z
       :type: float
