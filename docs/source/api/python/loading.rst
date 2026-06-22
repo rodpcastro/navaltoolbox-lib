@@ -222,7 +222,7 @@ LoadingCondition
       **CSV Format Example:**
 
       .. literalinclude:: ../../examples/loading_condition_template.csv
-         :language: csv
+         :language: text
 
       You can download this template here: :download:`loading_condition_template.csv <../../examples/loading_condition_template.csv>`
 
