@@ -798,11 +798,13 @@ impl<'a> StabilityCalculator<'a> {
             let waterline_z = hydrostatics.draft;
             let emerged_area = self.vessel.get_total_emerged_area(waterline_z);
             let emerged_centroid = self.vessel.get_combined_emerged_centroid(waterline_z);
+            let submerged_centroid = self.vessel.get_combined_submerged_centroid(waterline_z);
 
             if emerged_area > 0.0 {
                 Some(WindHeelingData::new(
                     emerged_area,
                     emerged_centroid,
+                    submerged_centroid,
                     waterline_z,
                 ))
             } else {
