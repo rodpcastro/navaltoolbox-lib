@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-06-22
+
 ### Added
 - **stability**: Implement exact wind lever arm calculation using submerged and emerged lateral area centroids per IMO 2008 IS Code §2.3.2.
 - **python**: Expose `submerged_centroid` property in `WindHeelingData` Python bindings.
