@@ -421,27 +421,35 @@ def plot_hydrostatic_condition(
     # Ry (Trim around Y)
     Ry = np.array([[ct, 0, st], [0, 1, 0], [-st, 0, ct]])
 
-    # Combined Rotation R = Rx @ Ry
-    R_total = Rx @ Ry
+    # Combined Rotation R (Heel then Trim, to match Rust: rot_y * rot_x)
+    R_total = Ry @ Rx
+
+    # Pivot point in Rust core is bounding box center and draft
+    bounds = vessel.get_bounds()
+    center_x = (bounds[0] + bounds[1]) / 2.0
+    center_y = (bounds[2] + bounds[3]) / 2.0
+
+    pivot_rust = np.array([center_x, center_y, draft])
+    offset_vis = np.array([center_x, center_y, 0.0])
 
     # Transform function
     def transform_points(points):
         if len(points) == 0:
             return []
         pts = np.array(points)
-        # Apply rotation (pts is Nx3, R_total is 3x3)
-        # (R @ v)^T = v^T @ R^T
-        rotated = pts @ R_total.T
 
-        # Apply translation
-        # Z translation: -draft.
-        # Ideally, we should pivot around the flotation center,
-        # but here we just translate vertically.
-        translated = rotated + [0, 0, -draft]
+        # Shift to pivot as defined in Rust core
+        shifted = pts - pivot_rust
+
+        # Apply rotation
+        rotated = shifted @ R_total.T
+
+        # Shift back and apply waterplane translation
+        # (Rust waterplane is at Z=draft, Viz waterplane is at Z=0)
+        translated = rotated + offset_vis
         return translated
 
     # 0. Waterplane
-    bounds = vessel.get_bounds()
     # Big plane
     L = bounds[1] - bounds[0]
     B = bounds[3] - bounds[2]
